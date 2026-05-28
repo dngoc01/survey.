@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Stock Investment Survey</title>
+<style>
+  :root {
+    --navy: #1a2e4a;
+    --blue: #2563a8;
+    --blue-lt: #e8f0fb;
+    --sell: #a32d2d;
+    --sell-lt: #fdf0f0;
+    --buy: #276227;
+    --buy-lt: #edf6e8;
+    --neutral: #555;
+    --border: #dde3ed;
+    --bg: #f5f7fb;
+    --card: #ffffff;
+    --text: #1a1a2e;
+    --muted: #6b7280;
+    --font: 'Georgia', serif;
+    --sans: 'Arial', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.7; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+
+  /* Progress */
+  .progress-bar { height: 4px; background: var(--border); border-radius: 2px; margin-bottom: 2rem; }
+  .progress-fill { height: 100%; background: var(--blue); border-radius: 2px; transition: width 0.4s ease; }
+  .progress-label { font-family: var(--sans); font-size: 12px; color: var(--muted); text-align: right; margin-bottom: 6px; }
+
+  /* Cards */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.75rem; margin-bottom: 1.25rem; }
+  .card-title { font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--blue); margin-bottom: 1rem; }
+
+  /* Scenario header */
+  .scenario-header { background: var(--navy); color: #fff; border-radius: 12px; padding: 1.25rem 1.75rem; margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center; }
+  .scenario-header h2 { font-size: 18px; font-weight: normal; letter-spacing: 0.01em; }
+  .scenario-header .vol { font-family: var(--sans); font-size: 13px; color: #a0b4cc; }
+
+  /* Chart placeholder */
+  .chart-box { background: var(--bg); border: 1px dashed var(--border); border-radius: 8px; height: 200px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px; color: var(--muted); font-family: var(--sans); font-size: 13px; margin-bottom: 1.25rem; }
+
+  /* Questions */
+  .q-label { font-size: 15px; color: var(--text); margin-bottom: 1rem; }
+  .q-num { font-family: var(--sans); font-weight: 600; color: var(--blue); margin-right: 6px; }
+
+  /* CI inputs */
+  .ci-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 0.5rem; }
+  .ci-field label { display: block; font-family: var(--sans); font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+  .ci-field input { width: 100%; border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; font-size: 14px; font-family: var(--sans); color: var(--text); background: #fff; transition: border 0.15s; }
+  .ci-field input:focus { outline: none; border-color: var(--blue); }
+
+  /* Bipolar slider */
+  .slider-section { margin-bottom: 0.5rem; }
+  .anchor-row { display: grid; grid-template-columns: repeat(5, 1fr); margin-bottom: 4px; }
+  .anchor-row span { font-family: var(--sans); font-size: 11px; color: var(--muted); text-align: center; }
+  .anchor-row span:first-child { text-align: left; }
+  .anchor-row span:last-child { text-align: right; }
+  .num-row { display: grid; grid-template-columns: repeat(5, 1fr); margin-bottom: 6px; }
+  .num-row span { font-family: var(--sans); font-size: 11px; color: var(--muted); text-align: center; }
+  .num-row span:first-child { text-align: left; }
+  .num-row span:last-child { text-align: right; }
+  input[type=range] { width: 100%; accent-color: var(--blue); cursor: pointer; margin-bottom: 10px; }
+  .badge { display: inline-block; font-family: var(--sans); font-size: 13px; font-weight: 600; padding: 5px 16px; border-radius: 6px; border: 1px solid var(--border); background: #f0f0f0; color: var(--muted); min-width: 160px; text-align: center; transition: all 0.2s; }
+  .badge.sell { background: var(--sell-lt); color: var(--sell); border-color: #f5c6c6; }
+  .badge.hold { background: #f5f5f0; color: #555; border-color: #ddd; }
+  .badge.buy  { background: var(--buy-lt); color: var(--buy); border-color: #b8ddb0; }
+  .badge-wrap { text-align: center; margin-bottom: 0.25rem; }
+
+  /* AI recommendation */
+  .ai-card { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 1.25rem 0; }
+  .ai-header { background: #f0f4fa; border-bottom: 1px solid var(--border); padding: 8px 16px; font-family: var(--sans); font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  .ai-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+  .ai-body { padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: space-between; }
+  .ai-label { font-family: var(--sans); font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .ai-pill { font-family: var(--sans); font-size: 22px; font-weight: 700; padding: 8px 28px; border-radius: 6px; letter-spacing: 0.04em; }
+  .ai-pill.buy  { background: var(--buy-lt); color: var(--buy); border: 1px solid #b8ddb0; }
+  .ai-pill.sell { background: var(--sell-lt); color: var(--sell); border: 1px solid #f5c6c6; }
+  .ai-conf { text-align: right; }
+  .ai-conf-val { font-family: var(--sans); font-size: 20px; font-weight: 700; color: var(--navy); }
+  .ai-footer { background: #fafafa; border-top: 1px solid var(--border); padding: 6px 16px; font-family: var(--sans); font-size: 11px; color: var(--muted); }
+
+  /* Likert */
+  .likert-wrap { margin-bottom: 0.5rem; }
+  .likert-ends { display: flex; justify-content: space-between; font-family: var(--sans); font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+  .likert-btns { display: flex; gap: 6px; }
+  .likert-btns button { flex: 1; border: 1px solid var(--border); background: #fff; border-radius: 6px; padding: 8px 4px; font-family: var(--sans); font-size: 13px; color: var(--muted); cursor: pointer; transition: all 0.15s; }
+  .likert-btns button:hover { background: var(--blue-lt); border-color: var(--blue); color: var(--blue); }
+  .likert-btns button.sel { background: var(--blue-lt); border-color: var(--blue); color: var(--blue); font-weight: 600; }
+
+  /* Section divider */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+
+  /* Nav buttons */
+  .nav { display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; }
+  .btn { font-family: var(--sans); font-size: 14px; padding: 10px 24px; border-radius: 8px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); background: #fff; color: var(--text); }
+  .btn:hover { background: var(--bg); }
+  .btn.primary { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .btn.primary:hover { background: var(--blue); border-color: var(--blue); }
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  /* Cover / End */
+  .cover { text-align: center; padding: 3rem 1rem; }
+  .cover h1 { font-size: 26px; color: var(--navy); margin-bottom: 0.75rem; font-weight: normal; }
+  .cover p { font-size: 15px; color: var(--muted); max-width: 480px; margin: 0 auto 1.5rem; line-height: 1.8; }
+  .cover .start-btn { display: inline-block; background: var(--navy); color: #fff; font-family: var(--sans); font-size: 15px; padding: 12px 36px; border-radius: 8px; cursor: pointer; border: none; transition: background 0.15s; margin-top: 0.5rem; }
+  .cover .start-btn:hover { background: var(--blue); }
+
+  /* Download box */
+  .dl-box { background: #e8f0fb; border: 1px solid #b8cff0; border-radius: 8px; padding: 1rem 1.25rem; font-family: var(--sans); font-size: 13px; color: var(--navy); margin-top: 1rem; }
+  .dl-btn { display: inline-block; background: var(--navy); color: #fff; padding: 9px 22px; border-radius: 6px; font-size: 13px; font-family: var(--sans); cursor: pointer; border: none; margin-top: 10px; transition: background 0.15s; }
+  .dl-btn:hover { background: var(--blue); }
+
+  /* Instruction box */
+  .instr { background: var(--blue-lt); border-left: 3px solid var(--blue); border-radius: 0 8px 8px 0; padding: 0.75rem 1rem; font-family: var(--sans); font-size: 13px; color: #1a3a6a; margin-bottom: 1.25rem; line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+const SCENARIOS = [
+  { id:1, label:"Company A", vol:"13.92", aiDir:"BUY",  aiConf:90 },
+  { id:2, label:"Company B", vol:"32.98", aiDir:"BUY",  aiConf:60 },
+  { id:3, label:"Company C", vol:"56.69", aiDir:"SELL", aiConf:90 },
+  { id:4, label:"Company D", vol:"75.91", aiDir:"SELL", aiConf:60 },
+  { id:5, label:"Company E", vol:"44.87", aiDir:"BUY",  aiConf:90 },
+  { id:6, label:"Company F", vol:"80.15", aiDir:"SELL", aiConf:60 },
+];
+
+const ORDER = shuffle([0,1,2,3,4,5]);
+let currentScene = -1; // -1 = cover, 6 = background, 7 = done
+let responses = {};
+let pid = 'P' + Date.now();
+
+function shuffle(a) {
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+function save(key, val) {
+  if(!responses[pid]) responses[pid] = { pid };
+  responses[pid][key] = val;
+}
+
+function render() {
+  const app = document.getElementById('app');
+  if(currentScene === -1) { app.innerHTML = coverHTML(); return; }
+  if(currentScene === 6)  { app.innerHTML = backgroundHTML(); return; }
+  if(currentScene === 7)  { app.innerHTML = doneHTML(); return; }
+  const sc = SCENARIOS[ORDER[currentScene]];
+  app.innerHTML = sceneHTML(sc, currentScene);
+  bindSlider('s1_'+sc.id, 'b1_'+sc.id);
+  bindSlider('s2_'+sc.id, 'b2_'+sc.id);
+  bindLikerts(sc.id);
+}
+
+function coverHTML() {
+  return `<div class="cover">
+    <div style="font-family:var(--sans);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--blue);margin-bottom:1rem;">Research Study</div>
+    <h1>AI-Assisted Stock Investment Survey</h1>
+    <p>In this study, all stock price information is generated by an AI system. You will review AI-generated information for six companies and make investment judgments for each.</p>
+    <p style="font-size:13px;color:var(--muted);">Estimated time: 25–35 minutes &nbsp;·&nbsp; All responses are anonymous</p>
+    <button class="start-btn" onclick="currentScene=0;render()">Begin survey →</button>
+  </div>`;
+}
+
+function sceneHTML(sc, idx) {
+  const isBuy = sc.aiDir === 'BUY';
+  const q = (idx * 9);
+  const total = 6;
+  const pct = Math.round(((idx) / total) * 100);
+  return `
+    <div class="progress-label">Scenario ${idx+1} of ${total}</div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+
+    <div class="scenario-header">
+      <h2>${sc.label}</h2>
+      <span class="vol">Annualized volatility: <strong>${sc.vol}%</strong></span>
+    </div>
+
+    <div class="instr">All information below has been generated by an AI system.</div>
+
+    <div class="chart-box">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      AI-generated price chart — Periods 1 to 10
+    </div>
+
+    <hr class="divider">
+    <div class="card">
+      <div class="card-title">Part A &nbsp;·&nbsp; Before AI advice</div>
+      <div class="q-label"><span class="q-num">Q${q+1}.</span>What do you expect this stock's price to be at Period 11? Provide your best estimate and a range you are 90% sure contains the true value.</div>
+      <div class="ci-grid">
+        <div class="ci-field"><label>Best estimate</label><input type="number" id="ci1a_${sc.id}" placeholder="e.g. 105" oninput="save('ci1a_${sc.id}',this.value)"></div>
+        <div class="ci-field"><label>Lower bound (5th pct.)</label><input type="number" id="ci1b_${sc.id}" placeholder="e.g. 95" oninput="save('ci1b_${sc.id}',this.value)"></div>
+        <div class="ci-field"><label>Upper bound (95th pct.)</label><input type="number" id="ci1c_${sc.id}" placeholder="e.g. 115" oninput="save('ci1c_${sc.id}',this.value)"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="q-label"><span class="q-num">Q${q+2}.</span>How likely are you to buy this stock?</div>
+      ${sliderHTML('s1_'+sc.id, 'b1_'+sc.id, 'q2_'+sc.id)}
+    </div>
+
+    <hr class="divider">
+    <div class="ai-card">
+      <div class="ai-header">
+        <span class="ai-dot" style="background:${isBuy?'#276227':'#a32d2d'}"></span>
+        AI analyst recommendation
+      </div>
+      <div class="ai-body">
+        <div>
+          <div class="ai-label">Recommendation</div>
+          <div class="ai-pill ${isBuy?'buy':'sell'}">${sc.aiDir} ${isBuy?'▲':'▼'}</div>
+        </div>
+        <div class="ai-conf">
+          <div class="ai-label">Confidence</div>
+          <div class="ai-conf-val">${sc.aiConf}%</div>
+        </div>
+      </div>
+      <div class="ai-footer">This recommendation is generated by an automated model and does not constitute financial advice.</div>
+    </div>
+    <hr class="divider">
+
+    <div class="card">
+      <div class="card-title">Part B &nbsp;·&nbsp; After AI advice</div>
+      <div class="q-label"><span class="q-num">Q${q+3}.</span>After reviewing the AI recommendation, how likely are you to buy this stock?</div>
+      ${sliderHTML('s2_'+sc.id, 'b2_'+sc.id, 'q3_'+sc.id)}
+    </div>
+
+    <div class="card">
+      <div class="q-label"><span class="q-num">Q${q+4}.</span>Please update your 90% confidence interval for the Period 11 price.</div>
+      <div class="ci-grid">
+        <div class="ci-field"><label>Best estimate</label><input type="number" id="ci2a_${sc.id}" placeholder="e.g. 105" oninput="save('ci2a_${sc.id}',this.value)"></div>
+        <div class="ci-field"><label>Lower bound (5th pct.)</label><input type="number" id="ci2b_${sc.id}" placeholder="e.g. 95" oninput="save('ci2b_${sc.id}',this.value)"></div>
+        <div class="ci-field"><label>Upper bound (95th pct.)</label><input type="number" id="ci2c_${sc.id}" placeholder="e.g. 115" oninput="save('ci2c_${sc.id}',this.value)"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Part C &nbsp;·&nbsp; Questions about the AI report</div>
+      ${likertHTML(q+5, 'mc1_'+sc.id, 'How confident did the AI appear to be in its recommendation?', 'Not confident at all', 'Extremely confident')}
+      <hr class="divider">
+      ${likertHTML(q+6, 'mc2_'+sc.id, 'How certain did the AI seem about the stock\'s future direction?', 'Not certain at all', 'Extremely certain')}
+      <hr class="divider">
+      ${likertHTML(q+7, 'mc3_'+sc.id, 'How decisive was the AI in making its recommendation?', 'Not decisive at all', 'Extremely decisive')}
+      <hr class="divider">
+      ${likertHTML(q+8, 'rel_'+sc.id, 'How much did the AI recommendation factor into your final decision?', 'Not at all', 'Completely')}
+      <hr class="divider">
+      ${likertHTML(q+9, 'tr_'+sc.id, 'How much do you trust this AI recommendation?', 'Do not trust at all', 'Trust completely')}
+    </div>
+
+    <div class="nav">
+      <button class="btn" onclick="prevScene()" ${idx===0?'disabled':''}>← Back</button>
+      <button class="btn primary" onclick="nextScene()">Next →</button>
+    </div>`;
+}
+
+function sliderHTML(sid, bid, saveKey) {
+  return `<div class="slider-section">
+    <div class="anchor-row">
+      <span>Definitely sell</span><span>Likely sell</span><span>Hold</span><span>Likely buy</span><span>Definitely buy</span>
+    </div>
+    <div class="num-row">
+      <span>0</span><span>25</span><span>50</span><span>75</span><span>100</span>
+    </div>
+    <input type="range" min="0" max="100" value="50" step="1" id="${sid}" oninput="updateBadge('${sid}','${bid}','${saveKey}')">
+    <div class="badge-wrap"><span class="badge hold" id="${bid}">50 — Hold</span></div>
+  </div>`;
+}
+
+function likertHTML(qn, key, question, left, right) {
+  return `<div style="margin-bottom:0.25rem">
+    <div class="q-label"><span class="q-num">Q${qn}.</span>${question}</div>
+    <div class="likert-ends"><span>${left}</span><span>${right}</span></div>
+    <div class="likert-btns" id="lk_${key}">
+      ${[1,2,3,4,5,6,7].map(n=>`<button onclick="pickLikert('${key}',${n},this)">${n}</button>`).join('')}
+    </div>
+  </div>`;
+}
+
+function backgroundHTML() {
+  return `<div>
+    <div class="progress-label">Background information</div>
+    <div class="progress-bar"><div class="progress-fill" style="width:92%"></div></div>
+    <div class="card">
+      <div class="card-title">Participant background</div>
+      <div class="q-label" style="margin-bottom:0.5rem"><span class="q-num">Q1.</span>What is your age?</div>
+      <select onchange="save('age',this.value)" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:var(--sans);margin-bottom:1rem;">
+        <option value="">Select...</option>
+        ${['18–24','25–34','35–44','45–54','55–64','65 or older'].map(o=>`<option>${o}</option>`).join('')}
+      </select>
+      <div class="q-label" style="margin-bottom:0.5rem"><span class="q-num">Q2.</span>What is your gender?</div>
+      <select onchange="save('gender',this.value)" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:var(--sans);margin-bottom:1rem;">
+        <option value="">Select...</option>
+        ${['Male','Female','Non-binary / third gender','Prefer not to say'].map(o=>`<option>${o}</option>`).join('')}
+      </select>
+      <div class="q-label" style="margin-bottom:0.5rem"><span class="q-num">Q3.</span>What is your highest level of education?</div>
+      <select onchange="save('edu',this.value)" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:var(--sans);margin-bottom:1rem;">
+        <option value="">Select...</option>
+        ${['High school diploma','Bachelor\'s degree','Master\'s degree','Doctoral degree','Professional degree (MBA, CFA etc.)','Other'].map(o=>`<option>${o}</option>`).join('')}
+      </select>
+      <div class="q-label" style="margin-bottom:0.5rem"><span class="q-num">Q4.</span>How many years of investment experience do you have?</div>
+      <select onchange="save('exp',this.value)" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:var(--sans);margin-bottom:1.25rem;">
+        <option value="">Select...</option>
+        ${['No experience','Less than 1 year','1–3 years','4–7 years','More than 7 years'].map(o=>`<option>${o}</option>`).join('')}
+      </select>
+      <div class="q-label" style="margin-bottom:0.5rem"><span class="q-num">Q5.</span>How familiar are you with AI-based investment tools?</div>
+      ${likertHTML(5,'ai_fam','','Not familiar at all','Extremely familiar')}
+    </div>
+    <div class="card">
+      <div class="card-title">Self-assessment</div>
+      <p style="font-family:var(--sans);font-size:13px;color:var(--muted);margin-bottom:1rem;">Please indicate how much you agree or disagree with each statement. (1 = Strongly disagree, 7 = Strongly agree)</p>
+      ${likertHTML('BG6','oc1','Compared with the average investor, I believe my investment decision-making ability is better.','Strongly disagree','Strongly agree')}
+      <hr class="divider">
+      ${likertHTML('BG7','oc2','I tend to make better investment decisions than most people.','Strongly disagree','Strongly agree')}
+      <hr class="divider">
+      ${likertHTML('BG8','oc3','My ability to evaluate stocks is above average compared to other investors.','Strongly disagree','Strongly agree')}
+    </div>
+    <div class="nav">
+      <button class="btn" onclick="currentScene=5;render()">← Back</button>
+      <button class="btn primary" onclick="currentScene=7;render()">Submit →</button>
+    </div>
+  </div>`;
+}
+
+function doneHTML() {
+  const csv = buildCSV();
+  return `<div class="cover">
+    <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#276227" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:1rem"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    <h1>Thank you for completing the survey.</h1>
+    <p>Your responses have been recorded. Please download them below and send the file to the researcher.</p>
+    <div class="dl-box">
+      <strong>Download your responses</strong><br>
+      Click the button below to save a CSV file containing all your answers.
+      <br><button class="dl-btn" onclick="downloadCSV()">Download responses (.csv)</button>
+    </div>
+  </div>`;
+}
+
+function buildCSV() {
+  const r = responses[pid] || {};
+  const keys = Object.keys(r);
+  return keys.join(',') + '\n' + keys.map(k => '"' + (r[k]||'') + '"').join(',');
+}
+
+function downloadCSV() {
+  const csv = buildCSV();
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'survey_' + pid + '.csv';
+  a.click();
+}
+
+function updateBadge(sid, bid, saveKey) {
+  const v = parseInt(document.getElementById(sid).value);
+  const el = document.getElementById(bid);
+  save(saveKey, v);
+  let label, cls;
+  if(v===0)      { label='0 — Definitely sell'; cls='sell'; }
+  else if(v<25)  { label=v+' — Likely sell';    cls='sell'; }
+  else if(v===25){ label='25 — Likely sell';    cls='sell'; }
+  else if(v<50)  { label=v+' — Lean sell';      cls='sell'; }
+  else if(v===50){ label='50 — Hold';           cls='hold'; }
+  else if(v<75)  { label=v+' — Lean buy';       cls='buy'; }
+  else if(v===75){ label='75 — Likely buy';     cls='buy'; }
+  else if(v<100) { label=v+' — Likely buy';     cls='buy'; }
+  else           { label='100 — Definitely buy';cls='buy'; }
+  el.textContent = label;
+  el.className = 'badge ' + cls;
+}
+
+function bindSlider(sid, bid) {
+  const el = document.getElementById(sid);
+  if(el) el.dispatchEvent(new Event('input'));
+}
+
+function bindLikerts(scid) {}
+
+function pickLikert(key, val, btn) {
+  document.querySelectorAll('#lk_'+key+' button').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  save(key, val);
+}
+
+function nextScene() { currentScene++; render(); window.scrollTo(0,0); }
+function prevScene() { currentScene--; render(); window.scrollTo(0,0); }
+
+render();
+</script>
+</body>
+</html>

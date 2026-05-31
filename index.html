@@ -432,63 +432,66 @@
       btn.disabled = true;
       btn.textContent = 'Submitting…';
 
-      // Collect all slider values
-      const sliders = ['q2','q3','q9','q10','q16','q17','q23','q24','q30','q31','q37','q38'];
-      const data = {};
-      sliders.forEach(id => {
+      const raw = {};
+
+      // Sliders
+      [['q2','Q2_CompA_buy_sell_before'],['q3','Q3_CompA_buy_sell_after'],
+       ['q9','Q9_CompB_buy_sell_before'],['q10','Q10_CompB_buy_sell_after'],
+       ['q16','Q16_CompC_buy_sell_before'],['q17','Q17_CompC_buy_sell_after'],
+       ['q23','Q23_CompD_buy_sell_before'],['q24','Q24_CompD_buy_sell_after'],
+       ['q30','Q30_CompE_buy_sell_before'],['q31','Q31_CompE_buy_sell_after'],
+       ['q37','Q37_CompF_buy_sell_before'],['q38','Q38_CompF_buy_sell_after']
+      ].forEach(([id, label]) => {
         const el = document.getElementById(id + '-slider');
-        if (el) data[id] = el.value;
+        if (el) raw[label] = el.value;
       });
 
-      // Collect all number/text inputs
-      const inputs = [
-        'q1-estimate','q1-low','q1-high',
-        'q4-estimate','q4-low','q4-high',
-        'q8-estimate','q8-low','q8-high',
-        'q11-estimate','q11-low','q11-high',
-        'q15-estimate','q15-low','q15-high',
-        'q18-estimate','q18-low','q18-high',
-        'q22-estimate','q22-low','q22-high',
-        'q25-estimate','q25-low','q25-high',
-        'q29-estimate','q29-low','q29-high',
-        'q32-estimate','q32-low','q32-high',
-        'q36-estimate','q36-low','q36-high',
-        'q39-estimate','q39-low','q39-high',
-        'dq1','dq2','dq3','dq6','dq-invest-other'
-      ];
-      inputs.forEach(id => {
+      // Number / text inputs
+      [['q1-estimate','Q1_CompA_price_estimate'],['q1-low','Q1_CompA_range_low'],['q1-high','Q1_CompA_range_high'],
+       ['q4-estimate','Q4_CompA_final_estimate'],['q4-low','Q4_CompA_final_low'],['q4-high','Q4_CompA_final_high'],
+       ['q8-estimate','Q8_CompB_price_estimate'],['q8-low','Q8_CompB_range_low'],['q8-high','Q8_CompB_range_high'],
+       ['q11-estimate','Q11_CompB_final_estimate'],['q11-low','Q11_CompB_final_low'],['q11-high','Q11_CompB_final_high'],
+       ['q15-estimate','Q15_CompC_price_estimate'],['q15-low','Q15_CompC_range_low'],['q15-high','Q15_CompC_range_high'],
+       ['q18-estimate','Q18_CompC_final_estimate'],['q18-low','Q18_CompC_final_low'],['q18-high','Q18_CompC_final_high'],
+       ['q22-estimate','Q22_CompD_price_estimate'],['q22-low','Q22_CompD_range_low'],['q22-high','Q22_CompD_range_high'],
+       ['q25-estimate','Q25_CompD_final_estimate'],['q25-low','Q25_CompD_final_low'],['q25-high','Q25_CompD_final_high'],
+       ['q29-estimate','Q29_CompE_price_estimate'],['q29-low','Q29_CompE_range_low'],['q29-high','Q29_CompE_range_high'],
+       ['q32-estimate','Q32_CompE_final_estimate'],['q32-low','Q32_CompE_final_low'],['q32-high','Q32_CompE_final_high'],
+       ['q36-estimate','Q36_CompF_price_estimate'],['q36-low','Q36_CompF_range_low'],['q36-high','Q36_CompF_range_high'],
+       ['q39-estimate','Q39_CompF_final_estimate'],['q39-low','Q39_CompF_final_low'],['q39-high','Q39_CompF_final_high'],
+       ['dq1','Q43_main_factor'],['dq2','Q44_occupation'],['dq3','Q45_age'],
+       ['dq6','Q48_years_experience'],['dq-invest-other','Q53_investments_other']
+      ].forEach(([id, label]) => {
         const el = document.getElementById(id);
-        if (el) data[id] = el.value;
+        if (el) raw[label] = el.value;
       });
 
-      // Collect all radio buttons
-      const radios = [
-        'q5','q6','q7','q12','q13','q14',
-        'q19','q20','q21','q26','q27','q28',
-        'q33','q34','q35','q40','q41','q42',
-        'dq4','dq5','dq-knowledge','dq8','dq-risk',
-        'dq-active','dq-frequent','dq12','dq13','dq14'
-      ];
-      radios.forEach(name => {
+      // Radio buttons
+      [['q5','Q5_CompA_recommendation'],['q6','Q6_CompA_confidence'],['q7','Q7_CompA_who'],
+       ['q12','Q12_CompB_recommendation'],['q13','Q13_CompB_confidence'],['q14','Q14_CompB_who'],
+       ['q19','Q19_CompC_recommendation'],['q20','Q20_CompC_confidence'],['q21','Q21_CompC_who'],
+       ['q26','Q26_CompD_recommendation'],['q27','Q27_CompD_confidence'],['q28','Q28_CompD_who'],
+       ['q33','Q33_CompE_recommendation'],['q34','Q34_CompE_confidence'],['q35','Q35_CompE_who'],
+       ['q40','Q40_CompF_recommendation'],['q41','Q41_CompF_confidence'],['q42','Q42_CompF_who'],
+       ['dq4','Q46_gender'],['dq5','Q47_education'],
+       ['dq-knowledge','Q49_knowledge_rating'],['dq12','Q50_AI_familiarity'],
+       ['dq-risk','Q51_risk_willingness'],['dq-active','Q52a_active_management'],
+       ['dq-frequent','Q52b_frequent_trades'],
+       ['dq8','Q54_overconfidence_1'],['dq13','Q55_overconfidence_2'],['dq14','Q56_overconfidence_3']
+      ].forEach(([name, label]) => {
         const el = document.querySelector(`input[name="${name}"]:checked`);
-        if (el) data[name] = el.value;
+        if (el) raw[label] = el.value;
       });
 
-      // Collect checkboxes (investments)
+      // Checkboxes
       const checked = [...document.querySelectorAll('input[name="dq-invest"]:checked')].map(el => el.value);
-      data['dq-invest'] = checked.join(', ');
-
-      // Collect Likert scales
-      ['dq7','dq8','dq9','dq10'].forEach(name => {
-        const el = document.querySelector(`input[name="${name}"]:checked`);
-        if (el) data[name] = el.value;
-      });
+      raw['Q53_investments_12mo'] = checked.join(', ');
 
       try {
         const res = await fetch('https://formspree.io/f/xeednbpz', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-          body: JSON.stringify(data)
+          body: JSON.stringify(raw)
         });
         if (res.ok) {
           goTo('sec-complete');
@@ -1449,7 +1452,7 @@
 
       <!-- Q7 -->
       <div class="q-block">
-        <p class="q-label"><span class="q-num">Q50.</span> How familiar are you with AI-based investment tools or robo-advisors?</p>
+        <p class="q-label"><span class="q-num">Q50.</span> How familiar are you with using AI tools or automated systems for investment-related decisions?</p>
         <div class="likert-wrap">
           <div class="likert-ends"><span>Not familiar at all</span><span>Extremely familiar</span></div>
           <div class="likert-row">
@@ -1466,7 +1469,7 @@
 
       <!-- Risk willingness -->
       <div class="q-block">
-        <p class="q-label"><span class="q-num">Q51.</span> I am willing to take financial risks in investment decisions.</p>
+        <p class="q-label"><span class="q-num">Q51.</span> In general, how willing are you to take risks when making investment decisions?</p>
         <div class="likert-wrap">
           <div class="likert-ends"><span>Strongly disagree</span><span>Strongly agree</span></div>
           <div class="likert-row">
